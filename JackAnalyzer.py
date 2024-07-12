@@ -186,7 +186,134 @@ class CompilationEngine:
         self.indentation -= 1
         self.output_file.write(" " * self.indentation + "</classVarDec>\n")
 
+    def compileSubroutine(self):
+        self.output_file.write(" " * self.indentation + "<subroutineDec>\n")
+        self.indentation += 1
 
+        # ('constructor' | 'function' | 'method')
+        self.writeKeyword()
+        self.tokenizer.advance()
+
+        # ('void' | type)
+        self.compileType()
+        self.tokenizer.advance()
+
+        # subroutineName
+        self.writeIdentifier()
+        self.tokenizer.advance()
+
+        # '('
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # parameterList
+        self.compileParameterList()
+
+        # ')'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # subroutineBody
+        self.compileSubroutineBody()
+
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</subroutineDec>\n")
+    
+    def compileParameterList(self):
+        self.output_file.write(" " * self.indentation + "<parameterList>\n")
+        self.indentation += 1
+
+        if self.tokenizer.tokenType() == "KEYWORD" or self.tokenizer.tokenType() == "IDENTIFIER":
+            # type
+            self.compileType()
+            self.tokenizer.advance()
+
+            # varName
+            self.compileVarName()
+            self.tokenizer.advance()
+
+            # (',' varName)*
+            while self.tokenizer.symbol() == ",":
+                self.writeSymbol()
+                self.tokenizer.advance()
+                self.writeIdentifier()
+                self.tokenizer.advance()
+        
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</parameterList>\n")
+    
+    def compileSubroutineBody(self):
+        self.output_file.write(" " * self.indentation + "<subroutineBody>\n")
+        self.indentation += 1
+
+        # '{'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # varDec*
+        while self.tokenizer.keyword() == "var":
+            self.compileVarDec()
+        
+        # statements
+        self.compileStatements()
+
+        # '}'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</subroutineBody>\n")
+
+    def compileVarDec(self):
+        self.output_file.write(" " * self.indentation + "<varDec>\n")
+        self.indentation += 1
+
+        # 'var'
+        self.writeKeyword()
+        self.tokenizer.advance()
+
+        # type
+        self.compileType()
+        self.tokenizer.advance()
+
+        # varName
+        self.compileVarName()
+        self.tokenizer.advance()
+
+        # (',' varName)*
+        while self.tokenizer.symbol() == ",":
+            self.writeSymbol()
+            self.tokenizer.advance()
+            self.writeIdentifier()
+            self.tokenizer.advance()
+        
+        # ';'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        self.output_file.write(" " + self.indentation + "</varDec>\n")
+    
+    def compileStatements(self):
+        self.output_file.write(" " + self.indentation + "<statements>\n")
+        self.indentation += 1
+
+        while self.tokenizer.tokenType() == "KEYWORD":
+            if self.tokenizer.keyword() == "if":
+                self.compileIf()
+            elif self.tokenizer.keyword() == "let":
+                self.compileLet()
+            elif self.tokenizer.keyword() == "while":
+                self.compileWhile()
+            elif self.tokenizer.keyword() == "do":
+                self.compileDo()
+            elif self.tokenizer.keyword() == "return":
+                self.compileReturn()
+        
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</statements>\n")
+    
+    
+                
 
         
 
