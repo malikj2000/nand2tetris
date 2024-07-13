@@ -291,10 +291,10 @@ class CompilationEngine:
         self.writeSymbol()
         self.tokenizer.advance()
 
-        self.output_file.write(" " + self.indentation + "</varDec>\n")
+        self.output_file.write(" " * self.indentation + "</varDec>\n")
     
     def compileStatements(self):
-        self.output_file.write(" " + self.indentation + "<statements>\n")
+        self.output_file.write(" " * self.indentation + "<statements>\n")
         self.indentation += 1
 
         while self.tokenizer.tokenType() == "KEYWORD":
@@ -311,9 +311,154 @@ class CompilationEngine:
         
         self.indentation -= 1
         self.output_file.write(" " * self.indentation + "</statements>\n")
-    
-    
-                
 
+    def compileLet(self):
+        self.output_file.write(" " * self.indentation + "<letStatement>\n")
+        self.indentation += 1
+
+        # 'let'
+        self.writeKeyword()
+        self.tokenizer.advance()
+
+        # varName
+        self.compileVarName()
+        self.tokenizer.advance()
+
+        # ('[' expression ']')
+        if self.tokenizer.symbol() == "[":
+            self.writeSymbol()
+            self.tokenizer.advance()
+            self.compileExpression()
+            self.writeSymbol()
+            self.tokenizer.advance()
         
+        # '='
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # expression
+        self.compileExpression()
+
+        # ';'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</letStatement>\n")
+
+    def compileIf(self):
+        self.output_file.write(" " * self.indentation + "<ifStatement>\n")
+        self.indentation += 1
+
+        # 'if'
+        self.writeKeyword()
+        self.tokenizer.advance()
+
+        # '('
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # expression
+        self.compileExpression()
+
+        # ')'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # '{'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # statements
+        self.compileStatements()
+
+        # '}'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # ('else' '{' statements '}')?
+        if self.tokenizer.keyword == "else":
+            self.writeKeyword()
+            self.tokenizer.advance()
+            self.writeSymbol()
+            self.tokenizer.advance()
+            self.compileStatements()
+            self.writeSymbol()
+            self.tokenizer.advance()
+        
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</ifStatement>\n")
+    
+    def compileWhile(self):
+        self.output_file.write(" " * self.indentation + "<whileStatement>\n")
+        self.indentation += 1
+
+        # 'while'
+        self.writeKeyword()
+        self.tokenizer.advance()
+
+        # '('
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # expression
+        self.compileExpression()
+
+        # ')'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # '{'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        # statements
+        self.compileStatements()
+
+        # '}'
+        self.writeSymbol()
+        self.tokenizer.advance()
+    
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</whileStatement>\n")
+    
+    def compileDo(self):
+        self.output_file.write(" " * self.indentation + "<doStatement>\n")
+        self.indentation += 1
+
+        # 'do'
+        self.writeKeyword()
+        self.tokenizer.advance()
+
+        # subroutineCall
+        self.compileSubroutineCall()
+
+        # ';'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</doStatement>\n")
+
+    def compileReturn(self):
+        self.output_file.write(" " * self.indentation + "<returnStatement>\n")
+        self.indentation += 1
+
+        # 'return'
+        self.writeKeyword()
+        self.tokenizer.advance()
+
+        # expression?
+        if self.tokenizer.tokenType != "SYMBOL":
+            self.compileExpression()
+        
+        # ';'
+        self.writeSymbol()
+        self.tokenizer.advance()
+
+        self.indentation -= 1
+        self.output_file.write(" " * self.indentation + "</returnStatement>\n")
+    
+    def compileExpression():
+        pass
 
