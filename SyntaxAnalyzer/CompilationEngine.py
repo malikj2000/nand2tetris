@@ -9,13 +9,20 @@ class CompilationEngine:
         self.ops = ['+', '-', '*', '/', '&', '|', '>', '<', '=']
     
     def writeKeyword(self):
-        self.output_file.write(" " * self.indentation + "<keyword> " + self.tokenizer.keyword() + " </keyword>\n")
+        self.output_file.write("  " * self.indentation + "<keyword> " + self.tokenizer.keyword() + " </keyword>\n")
     
     def writeIdentifier(self):
-        self.output_file.write(" " * self.indentation + "<identifier> " + self.tokenizer.identifier() + " </identifier>\n")
+        self.output_file.write("  " * self.indentation + "<identifier> " + self.tokenizer.identifier() + " </identifier>\n")
     
     def writeSymbol(self):
-        self.output_file.write(" " * self.indentation + "<symbol> " + self.tokenizer.symbol() + " </symbol>\n")
+        symbol = self.tokenizer.symbol()
+        if self.tokenizer.symbol() == "<":
+            symbol = "&lt;"
+        elif self.tokenizer.symbol() == ">":
+            symbol = "&gt;"
+        elif self.tokenizer.symbol() == "&":
+            symbol == "&amp;"
+        self.output_file.write("  " * self.indentation + "<symbol> " + symbol + " </symbol>\n")
     
     def compileType(self):
         if self.tokenizer.tokenType() == "KEYWORD":
@@ -49,7 +56,7 @@ class CompilationEngine:
                 self.compileClassVarDec()
 
             # subroutineDec
-            while self.tokenizer.keyword() == "constructor" or self.tokenizer.keyword() == "function" or self.tokenizer.keyword == "method":
+            while self.tokenizer.keyword() == "constructor" or self.tokenizer.keyword() == "function" or self.tokenizer.keyword() == "method":
                 self.compileSubroutine()
 
             # '}'
@@ -61,7 +68,7 @@ class CompilationEngine:
             
 
     def compileClassVarDec(self):
-        self.output_file.write(" " * self.indentation + "<classVarDec>\n")
+        self.output_file.write("  " * self.indentation + "<classVarDec>\n")
         self.indentation += 1
 
         # ('static' | 'field')
@@ -88,10 +95,10 @@ class CompilationEngine:
         self.tokenizer.advance()
 
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</classVarDec>\n")
+        self.output_file.write("  " * self.indentation + "</classVarDec>\n")
 
     def compileSubroutine(self):
-        self.output_file.write(" " * self.indentation + "<subroutineDec>\n")
+        self.output_file.write("  " * self.indentation + "<subroutineDec>\n")
         self.indentation += 1
 
         # ('constructor' | 'function' | 'method')
@@ -121,10 +128,10 @@ class CompilationEngine:
         self.compileSubroutineBody()
 
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</subroutineDec>\n")
+        self.output_file.write("  " * self.indentation + "</subroutineDec>\n")
     
     def compileParameterList(self):
-        self.output_file.write(" " * self.indentation + "<parameterList>\n")
+        self.output_file.write("  " * self.indentation + "<parameterList>\n")
         self.indentation += 1
 
         if self.tokenizer.tokenType() == "KEYWORD" or self.tokenizer.tokenType() == "IDENTIFIER":
@@ -136,18 +143,20 @@ class CompilationEngine:
             self.compileVarName()
             self.tokenizer.advance()
 
-            # (',' varName)*
+            # (',' type varName)*
             while self.tokenizer.symbol() == ",":
                 self.writeSymbol()
                 self.tokenizer.advance()
-                self.writeIdentifier()
+                self.compileType()
+                self.tokenizer.advance()
+                self.compileVarName()
                 self.tokenizer.advance()
         
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</parameterList>\n")
+        self.output_file.write("  " * self.indentation + "</parameterList>\n")
     
     def compileSubroutineBody(self):
-        self.output_file.write(" " * self.indentation + "<subroutineBody>\n")
+        self.output_file.write("  " * self.indentation + "<subroutineBody>\n")
         self.indentation += 1
 
         # '{'
@@ -166,10 +175,10 @@ class CompilationEngine:
         self.tokenizer.advance()
 
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</subroutineBody>\n")
+        self.output_file.write("  " * self.indentation + "</subroutineBody>\n")
 
     def compileVarDec(self):
-        self.output_file.write(" " * self.indentation + "<varDec>\n")
+        self.output_file.write("  " * self.indentation + "<varDec>\n")
         self.indentation += 1
 
         # 'var'
@@ -195,10 +204,11 @@ class CompilationEngine:
         self.writeSymbol()
         self.tokenizer.advance()
 
-        self.output_file.write(" " * self.indentation + "</varDec>\n")
+        self.indentation -= 1
+        self.output_file.write("  " * self.indentation + "</varDec>\n")
     
     def compileStatements(self):
-        self.output_file.write(" " * self.indentation + "<statements>\n")
+        self.output_file.write("  " * self.indentation + "<statements>\n")
         self.indentation += 1
 
         while self.tokenizer.tokenType() == "KEYWORD":
@@ -214,10 +224,10 @@ class CompilationEngine:
                 self.compileReturn()
         
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</statements>\n")
+        self.output_file.write("  " * self.indentation + "</statements>\n")
 
     def compileLet(self):
-        self.output_file.write(" " * self.indentation + "<letStatement>\n")
+        self.output_file.write("  " * self.indentation + "<letStatement>\n")
         self.indentation += 1
 
         # 'let'
@@ -248,10 +258,10 @@ class CompilationEngine:
         self.tokenizer.advance()
 
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</letStatement>\n")
+        self.output_file.write("  " * self.indentation + "</letStatement>\n")
 
     def compileIf(self):
-        self.output_file.write(" " * self.indentation + "<ifStatement>\n")
+        self.output_file.write("  " * self.indentation + "<ifStatement>\n")
         self.indentation += 1
 
         # 'if'
@@ -281,7 +291,7 @@ class CompilationEngine:
         self.tokenizer.advance()
 
         # ('else' '{' statements '}')?
-        if self.tokenizer.keyword == "else":
+        if self.tokenizer.keyword() == "else":
             self.writeKeyword()
             self.tokenizer.advance()
             self.writeSymbol()
@@ -291,10 +301,10 @@ class CompilationEngine:
             self.tokenizer.advance()
         
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</ifStatement>\n")
+        self.output_file.write("  " * self.indentation + "</ifStatement>\n")
     
     def compileWhile(self):
-        self.output_file.write(" " * self.indentation + "<whileStatement>\n")
+        self.output_file.write("  " * self.indentation + "<whileStatement>\n")
         self.indentation += 1
 
         # 'while'
@@ -324,10 +334,10 @@ class CompilationEngine:
         self.tokenizer.advance()
     
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</whileStatement>\n")
+        self.output_file.write("  " * self.indentation + "</whileStatement>\n")
     
     def compileDo(self):
-        self.output_file.write(" " * self.indentation + "<doStatement>\n")
+        self.output_file.write("  " * self.indentation + "<doStatement>\n")
         self.indentation += 1
 
         # 'do'
@@ -335,17 +345,58 @@ class CompilationEngine:
         self.tokenizer.advance()
 
         # subroutineCall (can be treated as an expression)
-        self.compileExpression()
+        cur_token = self.tokenizer.identifier()
+        self.tokenizer.advance()
+        if self.tokenizer.tokenType() == "SYMBOL":
+            # subroutineCall
+            if self.tokenizer.symbol() == '(':
+                # subroutineName
+                self.output_file.write("  " * self.indentation + "<identifier> " + cur_token + " </identifier>\n")
+
+                # '('
+                self.writeSymbol()
+                self.tokenizer.advance()
+
+                # expressionList
+                self.compileExpressionList()
+
+                # ')'
+                self.writeSymbol()
+                self.tokenizer.advance()
+
+            # (className | varName) '.' subroutineName (expressionList)
+            elif self.tokenizer.symbol() == '.':
+                # className | varName
+                self.output_file.write("  " * self.indentation + "<identifier> " + cur_token + " </identifier>\n")
+                
+                # '.'
+                self.writeSymbol()
+                self.tokenizer.advance()
+
+                # subroutineName
+                self.writeIdentifier()
+                self.tokenizer.advance()
+
+                # '('
+                self.writeSymbol()
+                self.tokenizer.advance()
+
+                # expressionList
+                self.compileExpressionList()
+
+                # ')'
+                self.writeSymbol()
+                self.tokenizer.advance()
 
         # ';'
         self.writeSymbol()
         self.tokenizer.advance()
 
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</doStatement>\n")
+        self.output_file.write("  " * self.indentation + "</doStatement>\n")
 
     def compileReturn(self):
-        self.output_file.write(" " * self.indentation + "<returnStatement>\n")
+        self.output_file.write("  " * self.indentation + "<returnStatement>\n")
         self.indentation += 1
 
         # 'return'
@@ -361,10 +412,10 @@ class CompilationEngine:
         self.tokenizer.advance()
 
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</returnStatement>\n")
+        self.output_file.write("  " * self.indentation + "</returnStatement>\n")
     
     def compileExpression(self):
-        self.output_file.write(" " * self.indentation + "<expression>\n")
+        self.output_file.write("  " * self.indentation + "<expression>\n")
         self.indentation += 1
 
         # term
@@ -377,17 +428,17 @@ class CompilationEngine:
             self.compileTerm()
         
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</expression>\n")
+        self.output_file.write("  " * self.indentation + "</expression>\n")
     
     def compileTerm(self):
-        self.output_file.write(" " * self.indentation + "<term>\n")
+        self.output_file.write("  " * self.indentation + "<term>\n")
         self.indentation += 1
 
         if self.tokenizer.tokenType() == "INT_CONST":
-            self.output_file.write(" " * self.indentation + "<integerConstant> " + str(self.tokenizer.intVal()) + " </integerConstant>\n")
+            self.output_file.write("  " * self.indentation + "<integerConstant> " + str(self.tokenizer.intVal()) + " </integerConstant>\n")
             self.tokenizer.advance()
         elif self.tokenizer.tokenType() == "STRING_CONST":
-            self.output_file.write(" " * self.indentation + "<stringConstant> " + self.tokenizer.stringVal() + " </stringConstant>\n")
+            self.output_file.write("  " * self.indentation + "<stringConstant> " + self.tokenizer.stringVal() + " </stringConstant>\n")
             self.tokenizer.advance()
         elif self.tokenizer.tokenType() == "KEYWORD":
             if self.tokenizer.keyword() in ['true', 'false', 'null', 'this']:
@@ -423,7 +474,7 @@ class CompilationEngine:
                 # subroutineCall
                 if self.tokenizer.symbol() == '(':
                     # subroutineName
-                    self.output_file.write(" " * self.indentation + "<subroutineName> " + cur_token + " </subroutineName>\n")
+                    self.output_file.write("  " * self.indentation + "<identifier> " + cur_token + " </identifier>\n")
 
                     # '('
                     self.writeSymbol()
@@ -431,7 +482,6 @@ class CompilationEngine:
 
                     # expressionList
                     self.compileExpressionList()
-                    self.tokenizer.advance()
 
                     # ')'
                     self.writeSymbol()
@@ -439,20 +489,15 @@ class CompilationEngine:
 
                 # (className | varName) '.' subroutineName (expressionList)
                 elif self.tokenizer.symbol() == '.':
-                    first_letter = cur_token[0]
-                    if first_letter.isupper():
-                        # className
-                        self.output_file.write(" " * self.indentation + "<className> " + cur_token + " </className>\n")
-                    else:
-                        # varName
-                        self.compileVarName()
+                    # className | varName
+                    self.output_file.write("  " * self.indentation + "<identifier> " + cur_token + " </identifier>\n")
                     
                     # '.'
                     self.writeSymbol()
                     self.tokenizer.advance()
 
                     # subroutineName
-                    self.output_file.write(" " * self.indentation + "<subroutineName> " + cur_token + " </subroutineName>\n")
+                    self.writeIdentifier()
                     self.tokenizer.advance()
 
                     # '('
@@ -461,7 +506,6 @@ class CompilationEngine:
 
                     # expressionList
                     self.compileExpressionList()
-                    self.tokenizer.advance()
 
                     # ')'
                     self.writeSymbol()
@@ -470,7 +514,7 @@ class CompilationEngine:
                 # varName '[' expression ']'
                 elif self.tokenizer.symbol() == '[':
                     # varName
-                    self.output_file.write(" " * self.indentation + "<identifier> " + cur_token + " </identifier>\n")
+                    self.output_file.write("  " * self.indentation + "<identifier> " + cur_token + " </identifier>\n")
 
                     # '['
                     self.writeSymbol()
@@ -481,6 +525,11 @@ class CompilationEngine:
 
                     # ']'
                     self.writeSymbol()
+                    self.tokenizer.advance()
+                
+                # varName (with another symbol)
+                else:
+                    self.output_file.write("  " * self.indentation + "<identifier> " + cur_token + " </identifier>\n")
 
             else:
                 # varName
@@ -488,14 +537,14 @@ class CompilationEngine:
                 self.tokenizer.advance()
         
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</term>\n")
+        self.output_file.write("  " * self.indentation + "</term>\n")
     
     def compileExpressionList(self):
-        self.output_file.write(" " * self.indentation + "<expressionList>\n")
+        self.output_file.write("  " * self.indentation + "<expressionList>\n")
         self.indentation += 1
 
         count = 0
-        if self.tokenizer.tokenType() != "SYMBOL" and self.tokenizer.symbol() != ')':
+        if self.tokenizer.tokenType() != "SYMBOL" or (self.tokenizer.tokenType() == "SYMBOL" and self.tokenizer.symbol() != ')'):
             self.compileExpression()
             count += 1
             while self.tokenizer.tokenType() == "SYMBOL" and self.tokenizer.symbol() == ',':
@@ -505,6 +554,6 @@ class CompilationEngine:
                 count += 1
         
         self.indentation -= 1
-        self.output_file.write(" " * self.indentation + "</expressionList>\n")
+        self.output_file.write("  " * self.indentation + "</expressionList>\n")
         return count
     

@@ -1,7 +1,7 @@
 class JackTokenizer:
 
     def __init__(self, input_file):
-        self.input_file = open(input_file, "r")
+        self.input_file = open(input_file, "rb")
         self.current_token = ""
         self.keywords = {"class", "constructor", "function", "method", "field", "static", "var", "int", "char", "boolean", "void", "true", "false", "null", "this", "let", "do", "if", "else", "while", "return"}
         self.symbols = {'{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'}
@@ -14,7 +14,7 @@ class JackTokenizer:
     
     def advance(self):
         while self.hasMoreTokens():
-            char = self.input_file.read(1)
+            char = str(self.input_file.read(1), "utf-8")
             
             # Skip whitespace
             if char.isspace():
@@ -22,15 +22,15 @@ class JackTokenizer:
             
             # Handle single-line comments
             if char == '/':
-                next_char = self.input_file.read(1)
+                next_char = str(self.input_file.read(1), "utf-8")
                 if next_char == '/':
                     self.input_file.readline()
                     continue
                 elif next_char == '*':
                     # Handle multi-line comments
                     while True:
-                        next_char = self.input_file.read(1)
-                        if next_char == '*' and self.input_file.read(1) == '/':
+                        next_char = str(self.input_file.read(1), "utf-8")
+                        if next_char == '*' and str(self.input_file.read(1), "utf-8") == '/':
                             break
                     continue
                 else:
@@ -44,7 +44,7 @@ class JackTokenizer:
             if char == '\"':
                 running_token += char
                 while True:
-                    char = self.input_file.read(1)
+                    char = str(self.input_file.read(1), "utf-8")
                     running_token += char
                     if char == '\"':
                         break
@@ -53,7 +53,7 @@ class JackTokenizer:
 
             while char and not char.isspace() and char not in self.symbols:
                 running_token += char
-                char = self.input_file.read(1)
+                char = str(self.input_file.read(1), "utf-8")
 
             if char in self.symbols:
                 self.input_file.seek(self.input_file.tell() - 1)
