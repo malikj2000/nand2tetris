@@ -1,3 +1,8 @@
+@256
+D=A
+@SP
+M=D
+(SimpleAdd.Sys.init)
 // C_PUSHconstant7
 @7
 D=A

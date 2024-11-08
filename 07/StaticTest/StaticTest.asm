@@ -1,3 +1,8 @@
+@256
+D=A
+@SP
+M=D
+(StaticTest.Sys.init)
 // C_PUSHconstant111
 @111
 D=A
