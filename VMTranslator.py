@@ -16,6 +16,8 @@ class Parser():
     def advance(self):
         while self.hasMoreLines():
             self.current_command = self.file.readline().strip()
+            if '//' in self.current_command:
+                self.current_command = self.current_command.split('//')[0].strip()
             if not self.current_command or self.current_command[0] == '/':
                 continue
             break
@@ -77,7 +79,7 @@ class CodeWriter():
         self.file.write("M=D\n")
 
         # call Sys.init
-        self.writeFunction("Sys.init", 0)
+        self.writeCall("Sys.init", "0")
 
     def writeArithmetic(self, command):
         # pop, command, push
@@ -180,29 +182,20 @@ class CodeWriter():
                 self.file.write("@SP\n")
                 self.file.write("M=M+1\n")
             elif segment == "local" or segment == "argument" or segment == "this" or segment == "that":
-                ptr = ""
-                if segment == "local":
-                    ptr = "LCL"
-                elif segment == "argument":
-                    ptr = "ARG"
-                elif segment == "this":
-                    ptr = "THIS"
-                elif segment == "that":
-                    ptr = "THAT"
-                if index != "0":
+                if segment in ["local", "argument", "this", "that"]:
+                    ptr = {"local": "LCL", "argument": "ARG", "this": "THIS", "that": "THAT"}[segment]
                     self.file.write("@" + index + "\n")
                     self.file.write("D=A\n")
-                elif index == "0":
-                    self.file.write("D=0\n")
-                self.file.write("@" + ptr + "\n")
-                self.file.write("A=M\n")
-                self.file.write("A=D+A\n")
-                self.file.write("D=M\n")
-                self.file.write("@SP\n")
-                self.file.write("A=M\n")
-                self.file.write("M=D\n")
-                self.file.write("@SP\n")
-                self.file.write("M=M+1\n")
+                    self.file.write("@" + ptr + "\n")
+                    self.file.write("A=M\n")
+                    self.file.write("D=D+A\n")
+                    self.file.write("A=D\n")
+                    self.file.write("D=M\n")
+                    self.file.write("@SP\n")
+                    self.file.write("A=M\n")
+                    self.file.write("M=D\n")
+                    self.file.write("@SP\n")
+                    self.file.write("M=M+1\n")
             elif segment == "static":
                 symbol = self.file.name[:self.file.name.index(".")] + "." + index
                 self.file.write("@" + symbol + "\n")
@@ -213,14 +206,21 @@ class CodeWriter():
                 self.file.write("@SP\n")
                 self.file.write("M=M+1\n")
             elif segment == "temp":
+                # D = index
                 self.file.write("@" + index + "\n")
                 self.file.write("D=A\n")
+                # D = D + 5 (base address of temp)
                 self.file.write("@5\n")
-                self.file.write("A=D+A\n")
+                self.file.write("D=D+A\n")
+                # A = D (set A to the computed address)
+                self.file.write("A=D\n")
+                # D = M[A] (value at temp[index])
                 self.file.write("D=M\n")
+                # *SP = D
                 self.file.write("@SP\n")
                 self.file.write("A=M\n")
                 self.file.write("M=D\n")
+                # SP++
                 self.file.write("@SP\n")
                 self.file.write("M=M+1\n")
             elif segment == "pointer":
@@ -242,28 +242,16 @@ class CodeWriter():
                     self.file.write("M=M+1\n")
         elif command == "C_POP":
             if segment == "local" or segment == "argument" or segment == "this" or segment == "that":
-                ptr = ""
-                if segment == "local":
-                    ptr = "LCL"
-                elif segment == "argument":
-                    ptr = "ARG"
-                elif segment == "this":
-                    ptr = "THIS"
-                elif segment == "that":
-                    ptr = "THAT"
-                if index != "0":
-                    self.file.write("@" + index + "\n")
-                    self.file.write("D=A\n")
-                elif index == "0":
-                    self.file.write("D=0\n")
+                ptr = {"local": "LCL", "argument": "ARG", "this": "THIS", "that": "THAT"}[segment]
+                self.file.write("@" + index + "\n")
+                self.file.write("D=A\n")
                 self.file.write("@" + ptr + "\n")
                 self.file.write("A=M\n")
                 self.file.write("D=D+A\n")
                 self.file.write("@addr\n")
                 self.file.write("M=D\n")
                 self.file.write("@SP\n")
-                self.file.write("M=M-1\n")
-                self.file.write("A=M\n")
+                self.file.write("AM=M-1\n")
                 self.file.write("D=M\n")
                 self.file.write("@addr\n")
                 self.file.write("A=M\n")
@@ -272,15 +260,21 @@ class CodeWriter():
                 symbol = self.file.name[:self.file.name.index(".")] + "." + index
                 self.file.write("@SP\nM=M-1\nA=M\nD=M\n@" + symbol + "\nM=D\n")
             elif segment == "temp":
+                # D = index
                 self.file.write("@" + index + "\n")
                 self.file.write("D=A\n")
+                # D = D + 5 (base address of temp)
                 self.file.write("@5\n")
                 self.file.write("D=D+A\n")
-                self.file.write("@addr\nM=D\n")
+                # Store the computed address in addr
+                self.file.write("@addr\n")
+                self.file.write("M=D\n")
+                # SP--
                 self.file.write("@SP\n")
-                self.file.write("M=M-1\n")
-                self.file.write("A=M\n")
+                self.file.write("AM=M-1\n")
+                # D = *SP
                 self.file.write("D=M\n")
+                # M[addr] = D
                 self.file.write("@addr\n")
                 self.file.write("A=M\n")
                 self.file.write("M=D\n")
@@ -306,27 +300,19 @@ class CodeWriter():
 
     def writeGoto(self, label):
         self.file.write("//goto " + label + "\n")
-        self.file.write(f"@{self.function_name}${label}\n0;JMP\n")
-    
-    def writeIf(self, label):
-        true_label = self.generate_unique_label("TRUE")
-        end_label = self.generate_unique_label("END")
-        self.file.write("//if-goto " + label + "\n")
-        self.file.write("@SP\n")
-        self.file.write("M=M-1\n")
-        self.file.write("A=M\n")
-        self.file.write("D=M\n")
-        self.file.write(f"@{true_label}\n")
-        self.file.write("D;JGT\n")
-        self.file.write(f"@{end_label}\n")
-        self.file.write("0;JMP\n")
-        self.file.write(f"({true_label})\n")
         self.file.write(f"@{self.function_name}${label}\n")
         self.file.write("0;JMP\n")
-        self.file.write(f"({end_label})\n")
+    
+    def writeIf(self, label):
+        self.file.write(f"// if-goto {label}\n")
+        self.file.write("@SP\n")
+        self.file.write("AM=M-1\n")
+        self.file.write("D=M\n")
+        self.file.write(f"@{self.function_name}${label}\n")
+        self.file.write("D;JNE\n")
 
     def writeFunction(self, functionName, nVars):
-        self.function_name = self.file.name[:self.file.name.index(".")] + "." + functionName
+        self.function_name = functionName
 
         # (functionName)
         self.file.write(f"({self.function_name})\n")
@@ -343,12 +329,12 @@ class CodeWriter():
 
     
     def writeCall(self, functionName, nArgs):
-        self.file.write("//call " + functionName + nArgs + "\n")
-        return_label = self.function_name + "$ret." + str(self.label_counter2)
+        self.file.write(f"// call {functionName} {nArgs}\n")
+        return_label = f"{self.function_name}$ret.{self.label_counter2}"
         self.label_counter2 += 1
 
-        # push return_label
-        self.file.write("@" + return_label + "\n")
+        # push return_address
+        self.file.write(f"@{return_label}\n")
         self.file.write("D=A\n")
         self.file.write("@SP\n")
         self.file.write("A=M\n")
@@ -356,22 +342,48 @@ class CodeWriter():
         self.file.write("@SP\n")
         self.file.write("M=M+1\n")
 
-        # push LCL, ARG, THIS, THAT
-        for segment in ["LCL", "ARG", "THIS", "THAT"]:
-            self.file.write("@" + segment + "\n")
-            self.file.write("D=A\n")
-            self.file.write("@SP\n")
-            self.file.write("A=M\n")
-            self.file.write("M=D\n")
-            self.file.write("@SP\n")
-            self.file.write("M=M+1\n")
-        
-        # ARG = SP - 5 - nArgs
+        # push LCL
+        self.file.write("@LCL\n")
+        self.file.write("D=M\n")
+        self.file.write("@SP\n")
+        self.file.write("A=M\n")
+        self.file.write("M=D\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M+1\n")
+
+        # push ARG
+        self.file.write("@ARG\n")
+        self.file.write("D=M\n")
+        self.file.write("@SP\n")
+        self.file.write("A=M\n")
+        self.file.write("M=D\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M+1\n")
+
+        # push THIS
+        self.file.write("@THIS\n")
+        self.file.write("D=M\n")
+        self.file.write("@SP\n")
+        self.file.write("A=M\n")
+        self.file.write("M=D\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M+1\n")
+
+        # push THAT
+        self.file.write("@THAT\n")
+        self.file.write("D=M\n")
+        self.file.write("@SP\n")
+        self.file.write("A=M\n")
+        self.file.write("M=D\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M+1\n")
+
+        # ARG = SP - nArgs - 5
         self.file.write("@SP\n")
         self.file.write("D=M\n")
-        self.file.write("@5\n")
+        self.file.write(f"@{nArgs}\n")
         self.file.write("D=D-A\n")
-        self.file.write("@" + str(nArgs) + "\n")
+        self.file.write("@5\n")
         self.file.write("D=D-A\n")
         self.file.write("@ARG\n")
         self.file.write("M=D\n")
@@ -383,7 +395,7 @@ class CodeWriter():
         self.file.write("M=D\n")
 
         # goto functionName
-        self.file.write("@" + functionName + "\n")
+        self.file.write(f"@{functionName}\n")
         self.file.write("0;JMP\n")
 
         # (return_label)
@@ -424,12 +436,41 @@ class CodeWriter():
         self.file.write("M=D\n")
 
         # Restore that, this, arg, and lcl segments.
-        for segment in ["THAT", "THIS", "ARG", "LCL"]:
-            self.file.write("@" + endFrame_label + "\n")
-            self.file.write("AM=M-1\n")
-            self.file.write("D=M\n")
-            self.file.write("@" + segment + "\n")
-            self.file.write("M=D\n")
+        # Restore THAT
+        self.file.write("@" + endFrame_label + "\n")
+        self.file.write("D=M\n")
+        self.file.write("@1\n")
+        self.file.write("A=D-A\n")
+        self.file.write("D=M\n")
+        self.file.write("@THAT\n")
+        self.file.write("M=D\n")
+
+        # Restore THIS
+        self.file.write("@" + endFrame_label + "\n")
+        self.file.write("D=M\n")
+        self.file.write("@2\n")
+        self.file.write("A=D-A\n")
+        self.file.write("D=M\n")
+        self.file.write("@THIS\n")
+        self.file.write("M=D\n")
+
+        # Restore ARG
+        self.file.write("@" + endFrame_label + "\n")
+        self.file.write("D=M\n")
+        self.file.write("@3\n")
+        self.file.write("A=D-A\n")
+        self.file.write("D=M\n")
+        self.file.write("@ARG\n")
+        self.file.write("M=D\n")
+
+        # Restore LCL
+        self.file.write("@" + endFrame_label + "\n")
+        self.file.write("D=M\n")
+        self.file.write("@4\n")
+        self.file.write("A=D-A\n")
+        self.file.write("D=M\n")
+        self.file.write("@LCL\n")
+        self.file.write("M=D\n")
         
         # goto retAddr
         self.file.write("@" + retAddr_label + "\n")

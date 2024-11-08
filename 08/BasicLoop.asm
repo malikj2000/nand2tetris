@@ -2,7 +2,7 @@
 D=A
 @SP
 M=D
-(.Sys.init)
+(BasicLoop.Sys.init)
 // C_PUSHconstant0
 @0
 D=A
@@ -26,7 +26,7 @@ D=M
 A=M
 M=D
 //label LOOP
-(.Sys.init$LOOP)
+(BasicLoop.Sys.init$LOOP)
 // C_PUSHargument0
 D=0
 @ARG
@@ -146,7 +146,7 @@ D;JGT
 @END1
 0;JMP
 (TRUE0)
-@.Sys.init$LOOP
+@BasicLoop.Sys.init$LOOP
 0;JMP
 (END1)
 // C_PUSHlocal0

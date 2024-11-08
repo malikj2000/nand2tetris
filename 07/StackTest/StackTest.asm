@@ -1,8 +1,3 @@
-@256
-D=A
-@SP
-M=D
-(StackTest.Sys.init)
 // C_PUSHconstant17
 @17
 D=A
