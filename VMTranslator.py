@@ -94,43 +94,91 @@ class CodeWriter():
         self.file.write("// " + command + "\n")
         if command in ["add", "sub", "and", "or", "eq", "gt", "lt"]:
             # Pop top of the stack into D
-            self.file.write("@SP\nM=M-1\nA=M\nD=M\n")
+            self.file.write("@SP\n")
+            self.file.write("M=M-1\n")
+            self.file.write("A=M\n")
+            self.file.write("D=M\n")
             # Pop next element of the stack into M
-            self.file.write("@SP\nM=M-1\nA=M\n")
+            self.file.write("@SP\n")
+            self.file.write("M=M-1\n")
+            self.file.write("A=M\n")
         if command == "add":
             self.file.write("D=D+M\n")
         elif command == "sub":
             self.file.write("D=M-D\n")
         elif command == "neg":
-            self.file.write("@SP\nM=M-1\nA=M\nM=-M\n@SP\nM=M+1\n")
+            self.file.write("@SP\n")
+            self.file.write("M=M-1\n")
+            self.file.write("A=M\n")
+            self.file.write("M=-M\n")
+            self.file.write("@SP\n")
+            self.file.write("M=M+1\n")
             return
         elif command == "eq":
             equal_label = self.generate_unique_label("EQUAL")
             end_label = self.generate_unique_label("END")
-            self.file.write(f"D=M-D\n@{equal_label}\nD;JEQ\nD=0\n@{end_label}\n0;JMP\n({equal_label})\nD=1\n({end_label})\n")
+            self.file.write("D=M-D\n")
+            self.file.write(f"@{equal_label}\n")
+            self.file.write("D;JEQ\n")
+            self.file.write("D=0\n")
+            self.file.write(f"@{end_label}")
+            self.file.write("0;JMP\n")
+            self.file.write(f"({equal_label})\n")
+            self.file.write("D=1\n")
+            self.file.write(f"({end_label})\n")
         elif command == "gt":
             gt_label = self.generate_unique_label("GREATER")
             end_label = self.generate_unique_label("END")
-            self.file.write(f"D=M-D\n@{gt_label}\nD;JGT\nD=0\n@{end_label}\n0;JMP\n({gt_label})\nD=1\n({end_label})\n")
+            self.file.write("D=M-D\n")
+            self.file.write(f"@{gt_label}")
+            self.file.write("D;JGT\n")
+            self.file.write("D=0\n")
+            self.file.write(f"@{end_label}\n")
+            self.file.write("0;JMP\n")
+            self.file.write(f"({gt_label})\n")
+            self.file.write("D=1\n")
+            self.file.write(f"({end_label})\n")
         elif command == "lt":
             lt_label = self.generate_unique_label("LESS")
             end_label = self.generate_unique_label("END")
-            self.file.write(f"D=M-D\n@{lt_label}\nD;JLT\nD=0\n@{end_label}\n0;JMP\n({lt_label})\nD=1\n({end_label})\n")
+            self.file.write("D=M-D\n")
+            self.file.write(f"@{lt_label}\n")
+            self.file.write("D;JLT\n")
+            self.file.write("D=0\n")
+            self.file.write(f"@{end_label}\n")
+            self.file.write("0;JMP\n")
+            self.file.write(f"({lt_label})\n")
+            self.file.write("D=1\n")
+            self.file.write(f"({end_label})\n")
         elif command == "and":
             self.file.write("D=D&M\n")
         elif command == "or":
             self.file.write("D=D|M\n")
         elif command == "not":
-            self.file.write("@SP\nM=M-1\nA=M\nM=!M\n@SP\nM=M+1\n")
+            self.file.write("@SP\n")
+            self.file.write("M=M-1\n")
+            self.file.write("A=M\n")
+            self.file.write("M=!M\n")
+            self.file.write("@SP\n")
+            self.file.write("M=M+1\n")
             return
-        self.file.write("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+        self.file.write("@SP\n")
+        self.file.write("A=M\n")
+        self.file.write("M=D\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M+1\n")
     
     def writePushPop(self, command, segment, index):
         self.file.write("// " + command + segment + index + "\n")
         if command == "C_PUSH":
             if segment == "constant":
                 self.file.write("@" + index + "\n")
-                self.file.write("D=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+                self.file.write("D=A\n")
+                self.file.write("@SP\n")
+                self.file.write("A=M\n")
+                self.file.write("M=D\n")
+                self.file.write("@SP\n")
+                self.file.write("M=M+1\n")
             elif segment == "local" or segment == "argument" or segment == "this" or segment == "that":
                 ptr = ""
                 if segment == "local":
@@ -150,28 +198,48 @@ class CodeWriter():
                 self.file.write("A=M\n")
                 self.file.write("A=D+A\n")
                 self.file.write("D=M\n")
-                self.file.write("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+                self.file.write("@SP\n")
+                self.file.write("A=M\n")
+                self.file.write("M=D\n")
+                self.file.write("@SP\n")
+                self.file.write("M=M+1\n")
             elif segment == "static":
                 symbol = self.file.name[:self.file.name.index(".")] + "." + index
                 self.file.write("@" + symbol + "\n")
                 self.file.write("D=M\n")
-                self.file.write("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+                self.file.write("@SP\n")
+                self.file.write("A=M\n")
+                self.file.write("M=D\n")
+                self.file.write("@SP\n")
+                self.file.write("M=M+1\n")
             elif segment == "temp":
                 self.file.write("@" + index + "\n")
                 self.file.write("D=A\n")
                 self.file.write("@5\n")
                 self.file.write("A=D+A\n")
                 self.file.write("D=M\n")
-                self.file.write("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+                self.file.write("@SP\n")
+                self.file.write("A=M\n")
+                self.file.write("M=D\n")
+                self.file.write("@SP\n")
+                self.file.write("M=M+1\n")
             elif segment == "pointer":
                 if index == "0":
                     self.file.write("@THIS\n")
                     self.file.write("D=M\n")
-                    self.file.write("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+                    self.file.write("@SP\n")
+                    self.file.write("A=M\n")
+                    self.file.write("M=D\n")
+                    self.file.write("@SP\n")
+                    self.file.write("M=M+1\n")
                 elif index == "1":
                     self.file.write("@THAT\n")
                     self.file.write("D=M\n")
-                    self.file.write("@SP\nA=M\nM=D\n@SP\nM=M+1\n")
+                    self.file.write("@SP\n")
+                    self.file.write("A=M\n")
+                    self.file.write("M=D\n")
+                    self.file.write("@SP\n")
+                    self.file.write("M=M+1\n")
         elif command == "C_POP":
             if segment == "local" or segment == "argument" or segment == "this" or segment == "that":
                 ptr = ""
@@ -191,8 +259,15 @@ class CodeWriter():
                 self.file.write("@" + ptr + "\n")
                 self.file.write("A=M\n")
                 self.file.write("D=D+A\n")
-                self.file.write("@addr\nM=D\n")
-                self.file.write("@SP\nM=M-1\nA=M\nD=M\n@addr\nA=M\nM=D\n")
+                self.file.write("@addr\n")
+                self.file.write("M=D\n")
+                self.file.write("@SP\n")
+                self.file.write("M=M-1\n")
+                self.file.write("A=M\n")
+                self.file.write("D=M\n")
+                self.file.write("@addr\n")
+                self.file.write("A=M\n")
+                self.file.write("M=D\n")
             elif segment == "static":
                 symbol = self.file.name[:self.file.name.index(".")] + "." + index
                 self.file.write("@SP\nM=M-1\nA=M\nD=M\n@" + symbol + "\nM=D\n")
@@ -202,12 +277,28 @@ class CodeWriter():
                 self.file.write("@5\n")
                 self.file.write("D=D+A\n")
                 self.file.write("@addr\nM=D\n")
-                self.file.write("@SP\nM=M-1\nA=M\nD=M\n@addr\nA=M\nM=D\n")
+                self.file.write("@SP\n")
+                self.file.write("M=M-1\n")
+                self.file.write("A=M\n")
+                self.file.write("D=M\n")
+                self.file.write("@addr\n")
+                self.file.write("A=M\n")
+                self.file.write("M=D\n")
             elif segment == "pointer":
                 if index == "0":
-                    self.file.write("@SP\nM=M-1\nA=M\nD=M\n@THIS\nM=D\n")
+                    self.file.write("@SP\n")
+                    self.file.write("M=M-1\n")
+                    self.file.write("A=M\n")
+                    self.file.write("D=M\n")
+                    self.file.write("@THIS\n")
+                    self.file.write("M=D\n")
                 elif index == "1":
-                    self.file.write("@SP\nM=M-1\nA=M\nD=M\n@THAT\nM=D\n")
+                    self.file.write("@SP\n")
+                    self.file.write("M=M-1\n")
+                    self.file.write("A=M\n")
+                    self.file.write("D=M\n")
+                    self.file.write("@THAT\n")
+                    self.file.write("M=D\n")
     
     def writeLabel(self, label):
         self.file.write("//label " + label + "\n")
@@ -221,7 +312,18 @@ class CodeWriter():
         true_label = self.generate_unique_label("TRUE")
         end_label = self.generate_unique_label("END")
         self.file.write("//if-goto " + label + "\n")
-        self.file.write(f"@SP\nM=M-1\nA=M\nD=M\n@{true_label}\nD;JGT\n@{end_label}\n0;JMP\n({true_label})\n@{self.function_name}${label}\n0;JMP\n({end_label})\n")
+        self.file.write("@SP\n")
+        self.file.write("M=M-1\n")
+        self.file.write("A=M\n")
+        self.file.write("D=M\n")
+        self.file.write(f"@{true_label}\n")
+        self.file.write("D;JGT\n")
+        self.file.write(f"@{end_label}\n")
+        self.file.write("0;JMP\n")
+        self.file.write(f"({true_label})\n")
+        self.file.write(f"@{self.function_name}${label}\n")
+        self.file.write("0;JMP\n")
+        self.file.write(f"({end_label})\n")
 
     def writeFunction(self, functionName, nVars):
         self.function_name = self.file.name[:self.file.name.index(".")] + "." + functionName

@@ -1,3 +1,8 @@
+@256
+D=A
+@SP
+M=D
+(PointerTest.Sys.init)
 // C_PUSHconstant3030
 @3030
 D=A

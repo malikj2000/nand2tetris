@@ -1,3 +1,8 @@
+@256
+D=A
+@SP
+M=D
+(BasicTest.Sys.init)
 // C_PUSHconstant10
 @10
 D=A
